@@ -1,5 +1,8 @@
 {
   "allowDirectMerges": false,
   "allowBotCommands": false,
-  "internalRepository": "fbsource"
+  "internalRepository": "fbsource",
+  "cannedReplies": {
+    "Human Timeout": "This issue has been waiting for more info for more than 1 weeks. I'm closing it for now, but feel free to re-open it if you can provide more info. https://github.com/facebook/hhvm/wiki/Human-Timeouts",
+  }
 }

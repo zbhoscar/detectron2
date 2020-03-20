@@ -1,3 +1,22 @@
+## Custom Function 
+Structure
+        
+    dataset/class/video_name/frames001.jpg
+    dataset/class/video_name/frames002.jpg
+    ...
+
+cd /home/zbh/Projects/detectron2/demo   
+conda activate detectron2   
+python demo.py \    
+--config-file ../configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml \ 
+--input /home/zbh/Absolute/HDD/maskrnntest.txt \    
+--input_dataset_dir /home/zbh/Absolute/SSD/ucfcrime \   
+--output_images_dir /home/zbh/Absolute/HDD/ucfcrime_test_maskrcnn_frames_images \   
+--output_txts_dir /home/zbh/Absolute/HDD/ucfcrime_test_maskrcnn_frames_txts 
+
+--opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
+
+
 <img src=".github/Detectron2-Logo-Horz.svg" width="300" >
 
 Detectron2 is Facebook AI Research's next generation software system

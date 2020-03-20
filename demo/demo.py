@@ -34,7 +34,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Detectron2 demo for builtin models")
     parser.add_argument(
         "--config-file",
-        default="configs/quick_schedules/mask_rcnn_R_50_FPN_inference_acc_test.yaml",
+        default="../configs/quick_schedules/mask_rcnn_R_50_FPN_inference_acc_test.yaml",
         metavar="FILE",
         help="path to config file",
     )
@@ -46,6 +46,23 @@ def get_parser():
         help="A list of space separated input images; "
         "or a single glob pattern such as 'directory/*.jpg'",
     )
+
+    ####### For video frames folder use ###############
+    parser.add_argument(
+        "--input_dataset_dir",
+        default="just_not_be_NONE_in_purposes",
+        help='For multi-layer-saving if using ./input_imagelist.txt',
+    )
+    parser.add_argument(
+        "--output_txts_dir",
+        default="/home/zbh/Absolute/HDD/ucfcrime_test_maskrcnn_frames_txts",
+    )
+    parser.add_argument(
+        "--output_images_dir",
+        default="/home/zbh/Absolute/HDD/ucfcrime_test_maskrcnn_frames_images",
+    )
+    #######################################################
+
     parser.add_argument(
         "--output",
         help="A file or directory to save output visualizations. "
@@ -61,7 +78,7 @@ def get_parser():
     parser.add_argument(
         "--opts",
         help="Modify config options using the command-line 'KEY VALUE' pairs",
-        default=[],
+        default=['MODEL.WEIGHTS', 'detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl'],
         nargs=argparse.REMAINDER,
     )
     return parser
@@ -81,6 +98,13 @@ if __name__ == "__main__":
     if args.input:
         if len(args.input) == 1:
             args.input = glob.glob(os.path.expanduser(args.input[0]))
+            ######  FOR ./input_imagelist.txt ######
+            # glob.glob(os.path.expanduser(['/home/zbh/Absolute/HDD/ucfcrime_test_frames.txt'][0]))
+            if len(args.input) == 1 and args.input[0][-4:] == '.txt':
+                with open(args.input[0], 'r') as f:
+                    contents = f.readlines()
+                args.input = [i.strip() for i in contents]
+            ##########################################
             assert args.input, "The input path(s) was not found"
         for path in tqdm.tqdm(args.input, disable=not args.output):
             # use PIL, to be consistent with evaluation
@@ -97,14 +121,39 @@ if __name__ == "__main__":
                 )
             )
 
-            if args.output:
-                if os.path.isdir(args.output):
+            if args.output or args.output_txts_dir or args.output_images_dir:
+                # if os.path.isdir(args.output):
+                if args.output:
                     assert os.path.isdir(args.output), args.output
                     out_filename = os.path.join(args.output, os.path.basename(path))
+                # else:
+                #     assert len(args.input) == 1, "Please specify a directory with args.output"
+                #     out_filename = args.output
+                # visualized_output.save(out_filename)
+                ###########################################################
+                    visualized_output.save(out_filename)
                 else:
-                    assert len(args.input) == 1, "Please specify a directory with args.output"
-                    out_filename = args.output
-                visualized_output.save(out_filename)
+                    assert args.input_dataset_dir in path, "--input_dataset_dir {} not matches {}".format(args.input_dataset_dir, path)
+                    if args.output_txts_dir:
+                        output_txt_filename = path.replace(args.input_dataset_dir, args.output_txts_dir)
+                        output_txt_filename = output_txt_filename.replace(os.path.splitext(output_txt_filename)[1], '.txt')
+                        os.makedirs(os.path.dirname(output_txt_filename), exist_ok=True)
+
+                        boxes = predictions['instances']._fields['pred_boxes'].tensor.cpu().numpy().tolist()
+                        scores = predictions['instances']._fields['scores'].cpu().numpy().tolist()
+                        classes = predictions['instances']._fields['pred_classes'].cpu().numpy().tolist()
+
+                        with open(output_txt_filename, 'a') as f:
+                            for i in range(len(classes)):
+                                list_all = boxes[i] + [classes[i]] + [scores[i]]
+                                line_string = ' '.join(["{:.4f}".format(elem) for elem in list_all])+'\n'
+                                f.writelines(line_string)
+
+                    if args.output_images_dir:
+                        output_image_filename = path.replace(args.input_dataset_dir, args.output_images_dir)
+                        os.makedirs(os.path.dirname(output_image_filename), exist_ok=True)
+                        visualized_output.save(output_image_filename)
+                #############################################################
             else:
                 cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
                 cv2.imshow(WINDOW_NAME, visualized_output.get_image()[:, :, ::-1])
